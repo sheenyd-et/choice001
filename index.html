@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>班級版型票選系統</title>
+    <style>
+        :root {
+            --primary: #FFB7B2; 
+            --secondary: #E2F0CB; 
+            --accent: #B5EAD7; 
+            --text: #333333;
+            --bg: #F9F6F0;
+        }
+        body {
+            font-family: '中黑體', '微軟正黑體', 'Microsoft JhengHei', '黑體', 'Heiti TC', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        }
+        h1, h2 {
+            text-align: center;
+            color: #ff9a9e;
+        }
+        .info-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .info-group input, .info-group select {
+            padding: 10px;
+            font-size: 1.1em;
+            border: 2px solid var(--accent);
+            border-radius: 10px;
+            outline: none;
+            text-align: center;
+            font-family: inherit;
+        }
+        .file-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .file-item {
+            background-color: var(--secondary);
+            padding: 10px 15px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: transform 0.2s;
+        }
+        .file-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .main-checkbox-area {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            flex-grow: 1;
+        }
+        .main-checkbox-area input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.3);
+            cursor: pointer;
+        }
+        /* 輔助註記區塊 */
+        .note-tools {
+            display: flex;
+            gap: 8px;
+            margin-left: 10px;
+            user-select: none;
+        }
+        .note-btn {
+            cursor: pointer;
+            font-size: 1.2em;
+            color: #ccc; /* 預設反白灰色 */
+            transition: 0.2s;
+            padding: 2px;
+        }
+        .note-btn:hover {
+            transform: scale(1.2);
+        }
+        .note-btn.circle.active { color: #4CAF50; font-weight: bold; } /* 綠色 */
+        .note-btn.triangle.active { color: #FF9800; font-weight: bold; } /* 橘黃色 */
+        .note-btn.cross.active { color: #F44336; font-weight: bold; } /* 紅色 */
+
+        .status-bar {
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #d4a5a5;
+        }
+        .highlight-num {
+            color: #ff6b6b;
+            font-size: 1.3em;
+            margin: 0 5px;
+        }
+        .btn {
+            display: block;
+            width: 200px;
+            margin: 0 auto;
+            padding: 12px 20px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 1.2em;
+            cursor: pointer;
+            font-family: inherit;
+            transition: 0.3s;
+        }
+        .btn:hover {
+            background-color: #ff9a9e;
+            transform: scale(1.05);
+        }
+        .admin-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #ccc;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .admin-filter {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .admin-filter select {
+            padding: 10px;
+            font-size: 1.2em;
+            border-radius: 10px;
+            border: 2px solid var(--primary);
+            font-family: inherit;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+        }
+        th {
+            background-color: var(--accent);
+        }
+        .clear-btn {
+            background-color: #ff6b6b;
+            margin-top: 20px;
+        }
+        .admin-content {
+            display: none; /* 未選擇班級前隱藏統計表 */
+        }
+    </style>
+</head>
+<body>
+    <!-- Director ETSHEN & Director 叡叡 -->
+    
+    <!-- 學生投票區 -->
+    <div class="container" id="student-view">
+        <h1>🎨 班級版型票選系統</h1>
+        <div class="info-group">
+            <select id="classNo" required>
+                <option value="" disabled selected>請選擇班級</option>
+                <option value="601">601 班</option>
+                <option value="602">602 班</option>
+                <option value="603">603 班</option>
+                <option value="604">604 班</option>
+                <option value="605">605 班</option>
+                <option value="606">606 班</option>
+                <option value="607">607 班</option>
+                <option value="608">608 班</option>
+                <option value="609">609 班</option>
+                <option value="610">610 班</option>
+            </select>
+            <input type="number" id="seatNo" placeholder="請輸入座號 (例: 1)" min="1" max="50" required>
+            <input type="text" id="studentName" placeholder="請輸入姓名" required>
+        </div>
+        <div class="status-bar">
+            已勾選：<span id="count" class="highlight-num">0</span> 個 ｜ 還可再選 <span id="remaining" class="highlight-num">12</span> 個
+            <br><span style="font-size: 0.8em; color: #888;">(後方的 ○ △ ✕ 僅供自己註記，最後送出以「前方框框是否有勾選」為準！)</span>
+        </div>
+        <div class="file-grid" id="file-list"></div>
+        <button class="btn" onclick="submitVote()">送出票選</button>
+    </div>
+
+    <!-- 後台管理區 -->
+    <div class="container" id="admin-view" style="display: none;">
+        <h1>📊 票選統計後台</h1>
+        
+        <div class="admin-filter">
+            <select id="adminClassSelect" onchange="renderAdminStats()">
+                <option value="" disabled selected>請先選擇要統計的班級</option>
+                <option value="601">601 班</option>
+                <option value="602">602 班</option>
+                <option value="603">603 班</option>
+                <option value="604">604 班</option>
+                <option value="605">605 班</option>
+                <option value="606">606 班</option>
+                <option value="607">607 班</option>
+                <option value="608">608 班</option>
+                <option value="609">609 班</option>
+                <option value="610">610 班</option>
+            </select>
+        </div>
+
+        <div id="admin-content-area" class="admin-content">
+            <h2>🏆 <span id="display-class"></span> 版型得票統計</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th width="15%">排名</th>
+                        <th width="60%">版型名稱</th>
+                        <th width="25%">得票數</th>
+                    </tr>
+                </thead>
+                <tbody id="tally-body"></tbody>
+            </table>
+
+            <h2>📝 學生投票紀錄</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th width="15%">座號</th>
+                        <th width="20%">姓名</th>
+                        <th width="65%">已選項目 (最多12個)</th>
+                    </tr>
+                </thead>
+                <tbody id="record-body"></tbody>
+            </table>
+        </div>
+
+        <button class="btn" onclick="exitAdmin()" style="margin-top: 30px;">返回投票頁面</button>
+        <button class="btn clear-btn" onclick="clearData()">清除所有資料</button>
+    </div>
+
+    <button class="admin-btn" onclick="enterAdmin()">管理員登入</button>
+
+    <script>
+        // 檔案資料庫 (111個檔案)
+        const filesData = [
+            { id: 1, name: '101a01nb-12星座' }, { id: 2, name: '101a02nb-小熊與企鵝n' }, { id: 3, name: '101a03nb-小精靈' }, { id: 4, name: '101a04nb-天天開心' }, { id: 5, name: '101a05nb-可愛塗鴉' }, { id: 6, name: '101a06nb-永遠的藝術家' }, { id: 7, name: '101a07nb-好鄰居' }, { id: 8, name: '101a08nb-吹泡泡' }, { id: 9, name: '101a09nb-我們的樂園' }, { id: 10, name: '101a10nb-奇異國' }, { id: 11, name: '101a11nb-保齡球' }, { id: 12, name: '101a12nb-俄羅斯方塊' }, { id: 13, name: '101a13nb-星空' }, { id: 14, name: '101a14nb-活力小雞' }, { id: 15, name: '101a15nb秋-天女神' }, { id: 16, name: '101a16nb-恭賀新禧' }, { id: 17, name: '101a17nb-海底世界' }, { id: 18, name: '101a18nb-創意世界' }, { id: 19, name: '101a19nb-童年' }, { id: 20, name: '101a20nb-華麗幻想曲' }, { id: 21, name: '101a21nb-聖誕節' }, { id: 22, name: '101a22nb-躲貓貓' }, { id: 23, name: '101a23nb-滿天星' }, { id: 24, name: '101a24nb-熊寶貝' }, { id: 25, name: '101a25nb-趣味紙雕' }, { id: 26, name: '101a26nb-繽紛花朵' }, { id: 27, name: '105anb11' }, { id: 28, name: '105anb15' }, { id: 29, name: '105anb17' }, { id: 30, name: '105anb19' }, { id: 31, name: '106nb01' }, { id: 32, name: '106nb02' }, { id: 33, name: '106nb03' }, { id: 34, name: '106nb06' }, { id: 35, name: '106nb08' }, { id: 36, name: '106nb14' }, { id: 37, name: '107nb03' }, { id: 38, name: '107nb04' }, { id: 39, name: '107nb05' }, { id: 40, name: '107nb07' }, { id: 41, name: '107nb08' }, { id: 42, name: '107nb09' }, { id: 43, name: '107nb10' }, { id: 44, name: '108nb02' }, { id: 45, name: '108nb03' }, { id: 46, name: '108nb06' }, { id: 47, name: '108nb07' }, { id: 48, name: '108nb08' }, { id: 49, name: '108nb12' }, { id: 50, name: '108nb14' }, { id: 51, name: '108nb16' }, { id: 52, name: '108nb19' }, { id: 53, name: '108nb20' }, { id: 54, name: '108nb21' }, { id: 55, name: '108nb25' }, { id: 56, name: '108nb26' }, { id: 57, name: '109nb03' }, { id: 58, name: '109nb07' }, { id: 59, name: '109nb08' }, { id: 60, name: '109nb09' }, { id: 61, name: '109nb10' }, { id: 62, name: '109nb12' }, { id: 63, name: '110nb01' }, { id: 64, name: '110nb02' }, { id: 65, name: '110nb03' }, { id: 66, name: '110nb04' }, { id: 67, name: '110nb05' }, { id: 68, name: '110nb6' }, { id: 69, name: '110nb07' }, { id: 70, name: '110nb08' }, { id: 71, name: '110nb09' }, { id: 72, name: '110nb11' }, { id: 73, name: '110nb13' }, { id: 74, name: '111nb03' }, { id: 75, name: '111nb04' }, { id: 76, name: '111nb06' }, { id: 77, name: '111nb09' }, { id: 78, name: '111nb11' }, { id: 79, name: '111nb12' }, { id: 80, name: '111nb13' }, { id: 81, name: '111nb14' }, { id: 82, name: '111nb15' }, { id: 83, name: '111nb16' }, { id: 84, name: '111nb17' }, { id: 85, name: '112nb01' }, { id: 86, name: '112nb02' }, { id: 87, name: '112nb03' }, { id: 88, name: '112nb04' }, { id: 89, name: '112nb05' }, { id: 90, name: '112nb06' }, { id: 91, name: '112nb07' }, { id: 92, name: '112nb09' }, { id: 93, name: '112nb10' }, { id: 94, name: '112nb11' }, { id: 95, name: '112nb12' }, { id: 96, name: '112nb13' }, { id: 97, name: '112nb14' }, { id: 98, name: '113nb01' }, { id: 99, name: '113nb02' }, { id: 100, name: '113nb03' }, { id: 101, name: '113nb04' }, { id: 102, name: '113nb05' }, { id: 103, name: '113nb06' }, { id: 104, name: '113nb07' }, { id: 105, name: '113nb08' }, { id: 106, name: '113nb09' }, { id: 107, name: '113nb10' }, { id: 108, name: '113nb11' }, { id: 109, name: '113nb12' }, { id: 110, name: '113nb13' }, { id: 111, name: '113nb14' }
+        ];
+
+        // 渲染畫面與選項
+        function renderFiles() {
+            const list = document.getElementById('file-list');
+            filesData.forEach(file => {
+                const div = document.createElement('div');
+                div.className = 'file-item';
+                div.innerHTML = `
+                    <label class="main-checkbox-area">
+                        <input type="checkbox" value="${file.name}" onchange="handleCheck(this)">
+                        <span>${file.name}</span>
+                    </label>
+                    <div class="note-tools">
+                        <span class="note-btn circle" onclick="toggleNote(this, 'circle')" title="喜歡">○</span>
+                        <span class="note-btn triangle" onclick="toggleNote(this, 'triangle')" title="猶豫">△</span>
+                        <span class="note-btn cross" onclick="toggleNote(this, 'cross')" title="不喜歡">✕</span>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        // 切換獨立註記 (僅供視覺呈現不影響實際送出結果)
+        function toggleNote(element, type) {
+            const parent = element.parentElement;
+            // 清除該題其他註記的 active 狀態
+            Array.from(parent.children).forEach(child => {
+                if(child !== element) child.classList.remove('active');
+            });
+            // 切換目前點擊的狀態
+            element.classList.toggle('active');
+        }
+
+        // 處理打勾邏輯與計算限制
+        function handleCheck(checkbox) {
+            let checkedBoxes = document.querySelectorAll('#file-list input[type="checkbox"]:checked');
+            
+            if (checkedBoxes.length > 12) {
+                alert('⚠️ 提示：正式勾選最多只能選擇 12 個喔！\n(如果有猶豫的項目，可以利用後方的 △ 標記)');
+                checkbox.checked = false;
+                checkedBoxes = document.querySelectorAll('#file-list input[type="checkbox"]:checked');
+            }
+            
+            const currentCount = checkedBoxes.length;
+            document.getElementById('count').innerText = currentCount;
+            document.getElementById('remaining').innerText = 12 - currentCount;
+        }
+
+        // 學生送出投票
+        function submitVote() {
+            const classNo = document.getElementById('classNo').value;
+            const seatNo = document.getElementById('seatNo').value.trim();
+            const name = document.getElementById('studentName').value.trim();
+            const checkedBoxes = document.querySelectorAll('#file-list input[type="checkbox"]:checked');
+            
+            if (!classNo || !seatNo || !name) {
+                alert('請確認「班級」、「座號」與「姓名」皆已填寫完整！');
+                return;
+            }
+            if (checkedBoxes.length === 0) {
+                alert('請至少在前方框框勾選 1 個版型！\n(後方的 ○△✕ 只是給您做記號，不會列入最終統計喔)');
+                return;
+            }
+
+            const selections = Array.from(checkedBoxes).map(cb => cb.value);
+            let records = JSON.parse(localStorage.getItem('voteRecords')) || [];
+            
+            // 檢查「同班級」且「同座號」是否已投過，有則覆蓋
+            const existingIndex = records.findIndex(r => r.classNo === classNo && r.seatNo === seatNo);
+            if(existingIndex > -1) {
+                records[existingIndex] = { classNo, seatNo, name, selections, time: new Date().toLocaleString() };
+            } else {
+                records.push({ classNo, seatNo, name, selections, time: new Date().toLocaleString() });
+            }
+            
+            localStorage.setItem('voteRecords', JSON.stringify(records));
+
+            // 清空表單、打勾狀態與註記
+            document.getElementById('seatNo').value = '';
+            document.getElementById('studentName').value = '';
+            checkedBoxes.forEach(cb => cb.checked = false);
+            
+            // 清除所有的視覺註記
+            document.querySelectorAll('.note-btn.active').forEach(btn => btn.classList.remove('active'));
+
+            document.getElementById('count').innerText = '0';
+            document.getElementById('remaining').innerText = '12';
+
+            alert(`✅ 投票成功！\n\n班級：${classNo} 班\n座號：${seatNo}\n姓名：${name}\n共選擇了 ${selections.length} 個版型。\n(如需修改，重新輸入相同資料送出即可覆蓋)`);
+        }
+
+        // 進入後台
+        function enterAdmin() {
+            const pwd = prompt("請輸入後台管理密碼：");
+            if (pwd === "314159") {
+                document.getElementById('student-view').style.display = 'none';
+                document.getElementById('admin-view').style.display = 'block';
+                document.querySelector('.admin-btn').style.display = 'none';
+                // 進入後台時，還原選擇班級下拉選單狀態
+                document.getElementById('adminClassSelect').value = "";
+                document.getElementById('admin-content-area').style.display = 'none';
+            } else if (pwd !== null) {
+                alert("密碼錯誤，無法進入後台。");
+            }
+        }
+
+        // 返回投票頁面
+        function exitAdmin() {
+            document.getElementById('admin-view').style.display = 'none';
+            document.getElementById('student-view').style.display = 'block';
+            document.querySelector('.admin-btn').style.display = 'block';
+        }
+
+        // 根據選擇的班級，渲染獨立的統計資料
+        function renderAdminStats() {
+            const selectedClass = document.getElementById('adminClassSelect').value;
+            if(!selectedClass) return;
+
+            document.getElementById('admin-content-area').style.display = 'block';
+            document.getElementById('display-class').innerText = selectedClass + " 班";
+
+            const allRecords = JSON.parse(localStorage.getItem('voteRecords')) || [];
+            
+            // 篩選出該班級的資料
+            const classRecords = allRecords.filter(r => r.classNo === selectedClass);
+            
+            // 1. 渲染學生紀錄 (依座號排序)
+            const recordBody = document.getElementById('record-body');
+            recordBody.innerHTML = '';
+            classRecords.sort((a, b) => parseInt(a.seatNo) - parseInt(b.seatNo));
+            
+            if (classRecords.length === 0) {
+                recordBody.innerHTML = '<tr><td colspan="3">目前該班級尚無投票資料</td></tr>';
+            } else {
+                classRecords.forEach(rec => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${rec.seatNo}</td>
+                        <td>${rec.name}</td>
+                        <td style="text-align: left;">${rec.selections.join('、')}</td>
+                    `;
+                    recordBody.appendChild(tr);
+                });
+            }
+
+            // 2. 統計得票數 (僅計算該班級)
+            const tallyMap = {};
+            classRecords.forEach(rec => {
+                rec.selections.forEach(item => {
+                    tallyMap[item] = (tallyMap[item] || 0) + 1;
+                });
+            });
+
+            const tallyArray = Object.keys(tallyMap).map(key => ({ name: key, count: tallyMap[key] }));
+            tallyArray.sort((a, b) => b.count - a.count);
+
+            const tallyBody = document.getElementById('tally-body');
+            tallyBody.innerHTML = '';
+            
+            if (tallyArray.length === 0) {
+                tallyBody.innerHTML = '<tr><td colspan="3">無票數統計</td></tr>';
+            } else {
+                tallyArray.forEach((item, index) => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${item.name}</td>
+                        <td>${item.count} 票</td>
+                    `;
+                    tallyBody.appendChild(tr);
+                });
+            }
+        }
+
+        // 清除資料
+        function clearData() {
+            if (confirm("⚠️ 警告：確定要清除「全校」所有的投票資料嗎？此動作無法復原！")) {
+                const checkPwd = prompt("為避免誤刪，請再次輸入密碼確認：");
+                if (checkPwd === "314159") {
+                    localStorage.removeItem('voteRecords');
+                    // 清除完畢後重置後台顯示
+                    document.getElementById('adminClassSelect').value = "";
+                    document.getElementById('admin-content-area').style.display = 'none';
+                    alert("資料已全數清除！");
+                } else {
+                    alert("密碼錯誤，取消刪除動作。");
+                }
+            }
+        }
+
+        window.onload = renderFiles;
+    </script>
+</body>
+</html>
